@@ -41,7 +41,7 @@
 /*
 * -------------------------------------------------------------- typedefs --
 */
-# define BUFFER 80
+# define BUFFER 20
 /*
 * --------------------------------------------------------------- globals --
 */
@@ -81,23 +81,35 @@ int main(int argc, const char *argv[])
 {
 
 
-//		int i = argc;
-//		for (i; i >= 0; i--)
-	
-//	printf("argc %d argv %s\n", i, argv[i]);
-	
+	//		int i = argc;
+	//		for (i; i >= 0; i--)
+
+	//	printf("argc %d argv %s\n", i, argv[i]);
 
 
-		if ( (argc < 2) && (do_check(argv) != 0) )
-	{							
+
+	if (argc < 2)
+	{
 		do_usage_print(argv);
 		return EXIT_FAILURE;
 	}
-	else
-	{	
-//		printf("check OK\n");
+	if (do_check(argv) == 0)
+	{
+		//printf("check OK\n");
 		do_file(argv[1], argv);
 	}
+	else
+	{
+		do_usage_print(argv);
+		exit(EXIT_FAILURE);
+	}
+
+	if (fflush(stdout) == EOF)
+	{
+		fprintf(stderr, "Unable to flush stdout!: %s\n", strerror(errno));
+	}
+
+	return EXIT_SUCCESS;
 }
 /**
 * \brief do_file compares parms with set parms and prints if corresponding
@@ -117,7 +129,7 @@ static void do_file(const char* file_name, const char* const* parms)
 	struct stat buf; //metadata (attribute)
 	int offset = 1; //helper variable to choose array element
 	int print_needed = 0;
-	int printed = 0;
+
 
 	if (lstat(file_name, &buf) == -1)
 	{
@@ -158,7 +170,7 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_comp_userOrGroup(parms[offset + 1], buf, "user");
+				print_needed = do_comp_userOrGroup(parms[offset + 1], buf, "-user");
 			}
 			else
 			{
@@ -171,7 +183,7 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_comp_userOrGroup(parms[offset + 1], buf, "group");
+				print_needed = do_comp_userOrGroup(parms[offset + 1], buf, "-group");
 			}
 			else
 			{
@@ -184,7 +196,7 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] == NULL)
 			{
-				print_needed = do_comp_no_userOrGroup(file_name, parms, buf, "user");
+				print_needed = do_comp_no_userOrGroup(file_name, parms, buf, "-user");
 			}
 			else
 			{
@@ -197,7 +209,7 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] == NULL)
 			{
-				print_needed = do_comp_no_userOrGroup(file_name, parms, buf, "group");
+				print_needed = do_comp_no_userOrGroup(file_name, parms, buf, "-group");
 			}
 			else
 			{
@@ -207,7 +219,7 @@ static void do_file(const char* file_name, const char* const* parms)
 		}
 		else if (strcmp(parms[offset], "-name") == 0)
 		{
-			
+
 			if (parms[offset + 1] != NULL)
 			{
 				print_needed = do_comp_name(file_name, parms[offset + 1]);
@@ -216,22 +228,23 @@ static void do_file(const char* file_name, const char* const* parms)
 		else if (strcmp(parms[offset], "-print") == 0)
 		{
 			do_comp_print(file_name);
-			
+			print_needed = 0;
 		}
 		else if (strcmp(parms[offset], "-ls") == 0)
 		{
 			do_ls_print(file_name, parms, buf);
+			print_needed = 0;
 		}
-		else if ( ((parms[1]) != NULL) && ((parms[2]) == NULL) && (printed == 0) )
+		else if (((parms[1]) != NULL) && ((parms[2]) == NULL) && (print_needed == 0))
 		{
-			print_needed = 1;			
+			print_needed = 1;
 		}
 		offset++;
 	}
-	if (print_needed > 0 )
+	if (print_needed > 0)
 	{
 		do_comp_print(file_name);
-		printed = 1;
+		print_needed = 0;
 	}
 
 	if (S_ISDIR(buf.st_mode)) //checks if file is a directory
@@ -314,11 +327,11 @@ static int do_type(const char* file_name, const char* parms, const struct stat b
 	else if (strcmp(parms, "l") == 0) match = S_ISLNK(buf.st_mode);
 	else if (strcmp(parms, "s") == 0) match = S_ISSOCK(buf.st_mode);
 	else
-	{	
+	{
 		fprintf(stderr, "%s: unknown argument to %s\n", parms, file_name);
 		exit(EXIT_FAILURE);
 	}
-	
+
 
 	if (match == 0)
 	{
@@ -342,7 +355,7 @@ static int do_path(const char* file_name, const char *parms)
 
 	match = fnmatch(parms, file_name, FNM_NOESCAPE);
 
-	if (match != 0) 
+	if (match != 0)
 	{
 		return 0;
 	}
@@ -378,7 +391,7 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 	}
 	else if (pwd != NULL)
 	{
-		if (strcmp(userOrGroup, "user") == 0)
+		if (strcmp(userOrGroup, "-user") == 0)
 		{
 			if (pwd->pw_uid == buf.st_uid)
 			{
@@ -394,7 +407,7 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 				return 1;
 			}
 		}
-		else if (strcmp(userOrGroup, "group") == 0)
+		else if (strcmp(userOrGroup, "-group") == 0)
 		{
 			if (pwd->pw_gid == id)
 			{
@@ -439,7 +452,7 @@ static int do_comp_no_userOrGroup(const char* file_name, const char* const* parm
 	const struct passwd *pwd = NULL;
 	const struct group *gid = NULL;
 	errno = 0;			//reset errno
-	if (strcmp(userOrGroup, "user") == 0)
+	if (strcmp(userOrGroup, "-nouser") == 0)
 	{
 		pwd = getpwuid(buf.st_uid);
 		if ((pwd == NULL) && (errno == 0))
@@ -451,7 +464,7 @@ static int do_comp_no_userOrGroup(const char* file_name, const char* const* parm
 			do_error(file_name, parms);
 		}
 	}
-	else if (strcmp(userOrGroup, "group") == 0)
+	else if (strcmp(userOrGroup, "-nogroup") == 0)
 	{
 		gid = getgrgid(buf.st_gid);
 		if ((gid == NULL) && (errno == 0))
@@ -526,8 +539,8 @@ static int do_comp_name(const char* file_name, const char* parms)
 *
 * \param parms is list of parms typed as parms of function
 *
-* 
-*					
+*
+*
 *
 */
 static void do_usage_print(const char* const* parms) /* how does error handling in printf work?? */
@@ -560,10 +573,10 @@ static int do_ls_print(const char* file_name, const char* const* parms, const st
 	unsigned int blocks = 0;
 	char mode[] = { "?---------" };
 
-	char do_name[strlen(file_name)];
 	int symb_link_length = 0;
+	char do_name[strlen(file_name)+ buf.st_size + 1];
 	char symb_link_string[buf.st_size];
-	const char arrow[] = { " -> " };
+	char arrow[] = { " -> " };
 
 	errno = 0;			//reset errno
 
@@ -577,7 +590,7 @@ static int do_ls_print(const char* file_name, const char* const* parms, const st
 	char do_time[BUFFER] = { 0 };
 
 
-	if		(S_ISREG(buf.st_mode))		mode[0] = '-';		//regular file
+	if (S_ISREG(buf.st_mode))		mode[0] = '-';		//regular file
 	else if (S_ISDIR(buf.st_mode))		mode[0] = 'd';		//directory
 	else if (S_ISCHR(buf.st_mode))		mode[0] = 'c';		//char special file
 	else if (S_ISBLK(buf.st_mode))		mode[0] = 'b';		//block special file			
@@ -587,21 +600,21 @@ static int do_ls_print(const char* file_name, const char* const* parms, const st
 	else								mode[0] = '?';		//unknown 
 
 
-	if		(buf.st_mode & S_IRUSR)									mode[1] = 'r'; //user readable	
-	if		(buf.st_mode & S_IWUSR)									mode[2] = 'w'; //user writeable
-	if		((buf.st_mode & S_IXUSR) && !(buf.st_mode & S_ISUID))	mode[3] = 'x'; //user executable without sticky
+	if (buf.st_mode & S_IRUSR)									mode[1] = 'r'; //user readable	
+	if (buf.st_mode & S_IWUSR)									mode[2] = 'w'; //user writeable
+	if ((buf.st_mode & S_IXUSR) && !(buf.st_mode & S_ISUID))	mode[3] = 'x'; //user executable without sticky
 	else if (buf.st_mode & S_IXUSR)									mode[3] = 's'; //user executable
 	else if (buf.st_mode & S_ISUID)									mode[3] = 'S'; //user not executable with sticky
 
-	if		(buf.st_mode & S_IRGRP)									mode[4] = 'r'; //group readable	
-	if		(buf.st_mode & S_IWGRP)									mode[5] = 'w'; //group writeable
-	if		((buf.st_mode & S_IXGRP) && !(buf.st_mode & S_ISGID))	mode[6] = 'x'; //group executable without sticky
+	if (buf.st_mode & S_IRGRP)									mode[4] = 'r'; //group readable	
+	if (buf.st_mode & S_IWGRP)									mode[5] = 'w'; //group writeable
+	if ((buf.st_mode & S_IXGRP) && !(buf.st_mode & S_ISGID))	mode[6] = 'x'; //group executable without sticky
 	else if (buf.st_mode & S_IXGRP)									mode[6] = 's'; //group executable
 	else if (buf.st_mode & S_ISGID)									mode[6] = 'S'; //group not executable with sticky
 
-	if		(buf.st_mode & S_IROTH)									mode[7] = 'r'; //others readable	
-	if		(buf.st_mode & S_IWOTH)									mode[8] = 'w'; //others writeable
-	if		((buf.st_mode & S_IXOTH) && !(buf.st_mode & S_ISVTX))	mode[9] = 'x'; //others executable without sticky
+	if (buf.st_mode & S_IROTH)									mode[7] = 'r'; //others readable	
+	if (buf.st_mode & S_IWOTH)									mode[8] = 'w'; //others writeable
+	if ((buf.st_mode & S_IXOTH) && !(buf.st_mode & S_ISVTX))	mode[9] = 'x'; //others executable without sticky
 	else if (buf.st_mode & S_IXOTH)									mode[9] = 't'; //others executable
 	else if (buf.st_mode & S_ISVTX)									mode[9] = 'T'; //others save swapped test after use (sticky)
 
@@ -620,17 +633,19 @@ static int do_ls_print(const char* file_name, const char* const* parms, const st
 
 	if (mode[0] == 'l')
 	{
-		symb_link_length = readlink(file_name, symb_link_string, buf.st_size);
-		symb_link_string[symb_link_length] = '\0';   //ending for readlink '/0'
+		symb_link_length = readlink(do_name, symb_link_string, buf.st_size);
+		symb_link_length += 1;
+		symb_link_string[symb_link_length -1 ] = '\0';   //ending for readlink '\0'
+		
 
-		if (symb_link_length)
-		{
+		if (symb_link_length != -1)
+		{		
 			strcat(do_name, arrow);
-			strcat(do_name, symb_link_string);
+			strcat(do_name, symb_link_string);	
 		}
 		else
 		{
-			fprintf(stderr, "%s: Symbolic link error: %s", *parms, strerror(errno));
+			fprintf(stderr, "%s: symbolic link error: %s", *parms, strerror(errno));
 		}
 	}
 
@@ -715,19 +730,19 @@ static int do_check(const char* const* parms)
 		{
 			if (parms[offset + 1] == NULL)
 			{
-				printf("%s: missing argument to `%s'\n",parms[0],parms[offset]);	//CHECK		
+				printf("%s: missing argument to `%s'\n", parms[0], parms[offset]);	//CHECK		
 				return EXIT_FAILURE;
 			}
 			offset += 2;
 		}
-		else if	(strcmp(parms[offset], "-print" ) == 0 ||
-				 strcmp(parms[offset], "-ls"	) == 0 ||
-				 strcmp(parms[offset], "-nouser") == 0 ||
-				 strcmp(parms[offset], "-nogroup") == 0)
+		else if (strcmp(parms[offset], "-print") == 0 ||
+			strcmp(parms[offset], "-ls") == 0 ||
+			strcmp(parms[offset], "-nouser") == 0 ||
+			strcmp(parms[offset], "-nogroup") == 0)
 		{
 			offset += 1;
 		}
-		else 
+		else
 		{
 			return EXIT_FAILURE;
 		}
