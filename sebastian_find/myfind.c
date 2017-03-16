@@ -79,36 +79,27 @@ static int do_comp_no_userOrGroup(const char* file_name, const char* const* parm
 */
 int main(int argc, const char *argv[])
 {
-
-
-	//		int i = argc;
-	//		for (i; i >= 0; i--)
-
-	//	printf("argc %d argv %s\n", i, argv[i]);
-
-
-
 	if (argc < 2)
 	{
 		do_usage_print(argv);
 		return EXIT_FAILURE;
 	}
-	if (do_check(argv) == 0)
+	else 
 	{
-		//printf("check OK\n");
-		do_file(argv[1], argv);
+		if (do_check(argv) == 0)
+		{
+			do_file(argv[1], argv);
+		}
+		else
+		{
+			do_usage_print(argv);
+			exit(EXIT_FAILURE);
+		}
 	}
-	else
-	{
-		do_usage_print(argv);
-		exit(EXIT_FAILURE);
-	}
-
 	if (fflush(stdout) == EOF)
 	{
 		fprintf(stderr, "Unable to flush stdout!: %s\n", strerror(errno));
 	}
-
 	return EXIT_SUCCESS;
 }
 /**
@@ -170,7 +161,7 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_comp_userOrGroup(parms[offset + 1], buf, "-user");
+				print_needed = do_comp_userOrGroup(parms[offset + 1], buf, "user");
 			}
 			else
 			{
@@ -183,7 +174,7 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_comp_userOrGroup(parms[offset + 1], buf, "-group");
+				print_needed = do_comp_userOrGroup(parms[offset + 1], buf, "group");
 			}
 			else
 			{
@@ -196,7 +187,7 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] == NULL)
 			{
-				print_needed = do_comp_no_userOrGroup(file_name, parms, buf, "-user");
+				print_needed = do_comp_no_userOrGroup(file_name, parms, buf, "user");
 			}
 			else
 			{
@@ -209,7 +200,7 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] == NULL)
 			{
-				print_needed = do_comp_no_userOrGroup(file_name, parms, buf, "-group");
+				print_needed = do_comp_no_userOrGroup(file_name, parms, buf, "group");
 			}
 			else
 			{
@@ -319,7 +310,7 @@ static int do_type(const char* file_name, const char* parms, const struct stat b
 {
 	int match = -1;
 
-	if		(strcmp(parms, "b") == 0) match = S_ISBLK(buf.st_mode);
+	if	(strcmp(parms, "b") == 0) match = S_ISBLK(buf.st_mode);
 	else if (strcmp(parms, "c") == 0) match = S_ISCHR(buf.st_mode);
 	else if (strcmp(parms, "d") == 0) match = S_ISDIR(buf.st_mode);
 	else if (strcmp(parms, "p") == 0) match = S_ISFIFO(buf.st_mode);
@@ -590,33 +581,33 @@ static int do_ls_print(const char* file_name, const char* const* parms, const st
 	char do_time[BUFFER] = { 0 };
 
 
-	if (S_ISREG(buf.st_mode))		mode[0] = '-';		//regular file
+	if 	(S_ISREG(buf.st_mode))		mode[0] = '-';		//regular file
 	else if (S_ISDIR(buf.st_mode))		mode[0] = 'd';		//directory
 	else if (S_ISCHR(buf.st_mode))		mode[0] = 'c';		//char special file
 	else if (S_ISBLK(buf.st_mode))		mode[0] = 'b';		//block special file			
 	else if (S_ISFIFO(buf.st_mode))		mode[0] = 'f';		//FIFO(named pipe)
 	else if (S_ISLNK(buf.st_mode))		mode[0] = 'l';		//symbolic link
 	else if (S_ISSOCK(buf.st_mode))		mode[0] = 's';		//socket
-	else								mode[0] = '?';		//unknown 
+	else					mode[0] = '?';		//unknown 
 
 
-	if (buf.st_mode & S_IRUSR)									mode[1] = 'r'; //user readable	
-	if (buf.st_mode & S_IWUSR)									mode[2] = 'w'; //user writeable
+	if (buf.st_mode & S_IRUSR)					mode[1] = 'r'; //user readable	
+	if (buf.st_mode & S_IWUSR)					mode[2] = 'w'; //user writeable
 	if ((buf.st_mode & S_IXUSR) && !(buf.st_mode & S_ISUID))	mode[3] = 'x'; //user executable without sticky
-	else if (buf.st_mode & S_IXUSR)									mode[3] = 's'; //user executable
-	else if (buf.st_mode & S_ISUID)									mode[3] = 'S'; //user not executable with sticky
+	else if (buf.st_mode & S_IXUSR)					mode[3] = 's'; //user executable
+	else if (buf.st_mode & S_ISUID)					mode[3] = 'S'; //user not executable with sticky
 
-	if (buf.st_mode & S_IRGRP)									mode[4] = 'r'; //group readable	
-	if (buf.st_mode & S_IWGRP)									mode[5] = 'w'; //group writeable
+	if (buf.st_mode & S_IRGRP)					mode[4] = 'r'; //group readable	
+	if (buf.st_mode & S_IWGRP)					mode[5] = 'w'; //group writeable
 	if ((buf.st_mode & S_IXGRP) && !(buf.st_mode & S_ISGID))	mode[6] = 'x'; //group executable without sticky
-	else if (buf.st_mode & S_IXGRP)									mode[6] = 's'; //group executable
-	else if (buf.st_mode & S_ISGID)									mode[6] = 'S'; //group not executable with sticky
+	else if (buf.st_mode & S_IXGRP)					mode[6] = 's'; //group executable
+	else if (buf.st_mode & S_ISGID)					mode[6] = 'S'; //group not executable with sticky
 
-	if (buf.st_mode & S_IROTH)									mode[7] = 'r'; //others readable	
-	if (buf.st_mode & S_IWOTH)									mode[8] = 'w'; //others writeable
+	if (buf.st_mode & S_IROTH)					mode[7] = 'r'; //others readable	
+	if (buf.st_mode & S_IWOTH)					mode[8] = 'w'; //others writeable
 	if ((buf.st_mode & S_IXOTH) && !(buf.st_mode & S_ISVTX))	mode[9] = 'x'; //others executable without sticky
-	else if (buf.st_mode & S_IXOTH)									mode[9] = 't'; //others executable
-	else if (buf.st_mode & S_ISVTX)									mode[9] = 'T'; //others save swapped test after use (sticky)
+	else if (buf.st_mode & S_IXOTH)					mode[9] = 't'; //others executable
+	else if (buf.st_mode & S_ISVTX)					mode[9] = 'T'; //others save swapped test after use (sticky)
 
 	strcpy(do_name, file_name);
 
@@ -722,10 +713,10 @@ static int do_check(const char* const* parms)
 
 	while (parms[offset] != NULL)
 	{
-		if (strcmp(parms[offset], "-user") == 0 ||
-			strcmp(parms[offset], "-name") == 0 ||
-			strcmp(parms[offset], "-type") == 0 ||
-			strcmp(parms[offset], "-path") == 0 ||
+		if 	(strcmp(parms[offset], "-user") == 0 ||
+			strcmp(parms[offset], "-name" ) == 0 ||
+			strcmp(parms[offset], "-type" ) == 0 ||
+			strcmp(parms[offset], "-path" ) == 0 ||
 			strcmp(parms[offset], "-group") == 0)
 		{
 			if (parms[offset + 1] == NULL)
@@ -736,7 +727,7 @@ static int do_check(const char* const* parms)
 			offset += 2;
 		}
 		else if (strcmp(parms[offset], "-print") == 0 ||
-			strcmp(parms[offset], "-ls") == 0 ||
+			strcmp(parms[offset], "-ls"    ) == 0 ||
 			strcmp(parms[offset], "-nouser") == 0 ||
 			strcmp(parms[offset], "-nogroup") == 0)
 		{
