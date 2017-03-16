@@ -382,7 +382,7 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 	}
 	else if (pwd != NULL)
 	{
-		if (strcmp(userOrGroup, "-user") == 0)
+		if (strcmp(userOrGroup, "user") == 0)
 		{
 			if (pwd->pw_uid == buf.st_uid)
 			{
@@ -398,7 +398,7 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 				return 1;
 			}
 		}
-		else if (strcmp(userOrGroup, "-group") == 0)
+		else if (strcmp(userOrGroup, "group") == 0)
 		{
 			if (pwd->pw_gid == id)
 			{
