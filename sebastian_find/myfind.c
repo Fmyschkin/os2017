@@ -189,7 +189,12 @@ static void do_file(const char* file_name, const char* const* parms)
 				match = do_name(file_name, parms[offset + 1]);
 				offset++;
 			}
-		}
+			else
+			{
+				fprintf(stderr, "%s: -name needs another argument `%s'\n", file_name, *parms);
+				exit(EXIT_FAILURE);
+			}	
+		}	
 		else if (strcmp(parms[offset], "-type") == 0)
 		{
 			if (parms[offset + 1] != NULL)
@@ -199,7 +204,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+				fprintf(stderr, "%s: -type needs another argument `%s'\n", file_name, *parms);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -213,7 +218,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+				fprintf(stderr, "%s: -path needs another argument `%s'\n", file_name, *parms);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -227,7 +232,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+				fprintf(stderr, "%s: -user needs another argument `%s'\n", file_name, *parms);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -241,27 +246,27 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+				fprintf(stderr, "%s: -group needs another argument `%s'\n", file_name, *parms);
 				exit(EXIT_FAILURE);
 			}
 		}
 		else if (strcmp(parms[offset], "-nouser") == 0)
 		{
-			match = do_no_userOrGroup(file_name, parms, buf, "user");		
+			match = do_no_userOrGroup(file_name, parms, buf, "user");
 		}
 		else if (strcmp(parms[offset], "-nogroup") == 0)
 		{
-			match = do_no_userOrGroup(file_name, parms, buf, "group");			
+			match = do_no_userOrGroup(file_name, parms, buf, "group");
 		}
 		else if (strcmp(parms[offset], "-print") == 0)
 		{
 			do_print(file_name);
-			printed = 1;			
+			printed = 1;
 		}
 		else if (strcmp(parms[offset], "-ls") == 0)
 		{
 			do_ls_print(file_name, parms, buf);
-			printed = 1;			
+			printed = 1;
 		}
 		else if (((parms[1]) != NULL) && ((parms[2]) == NULL) && (match == 0))
 		{
@@ -298,23 +303,23 @@ static void do_dir(const char* dir_name, const char* const* parms)
 {
 	DIR *dirp = NULL;
 	const struct dirent *dirent;
-	int offset = 1; //helper variable to choose array element
+	int offset = 1; 
 
 	dirp = opendir(dir_name);
 	if (dirp == NULL)
 	{
-		fprintf(stderr, "%s: can't open directory `%s'\n", *parms, strerror(errno));
+		fprintf(stderr, "%s: can't open directory `%s'\n", file_name, *parms);
 		return;
 	}
 
-	errno = 0;					//reset errno
+	errno = 0;				
 
 	while ((dirent = readdir(dirp)) != NULL)
 	{
 		if (errno != 0)
 		{
-			fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
-			errno = 0;			//reset errno
+			fprintf(stderr, "%s: can't read directory `%s'\n", *parms, strerror(errno));
+			errno = 0;		
 			continue;
 		}
 
@@ -335,7 +340,7 @@ static void do_dir(const char* dir_name, const char* const* parms)
 
 	if (closedir(dirp) != 0)
 	{
-		fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+		fprintf(stderr, "%s: can't close directory `%s'\n", file_name, *parms);
 		return;
 	}
 
@@ -361,7 +366,7 @@ static int do_name(const char* file_name, const char* parms)
 	char* base = NULL;
 	strcpy(temp_name, file_name);
 	base = basename(temp_name);
-	
+
 	int match_name = fnmatch(parms, base, FNM_NOESCAPE);
 
 	if (match_name == 0)
@@ -370,12 +375,12 @@ static int do_name(const char* file_name, const char* parms)
 	}
 	else if (match_name == FNM_NOMATCH)
 	{
-		exit(EXIT_SUCCESS);
+		exit(EXIT_SUCCESS);//return 0;
 	}
 	else if (match_name != 0) //nonzero value if there is an error
 		exit(EXIT_FAILURE);
 
-	exit(EXIT_SUCCESS);
+	exit(EXIT_SUCCESS);// return 0;
 }
 
 /**
@@ -418,7 +423,7 @@ static int do_type(const char* parms, const struct stat buf)
 	}
 	if (match == 0)
 	{
-		exit(EXIT_SUCCESS);
+		return 0;
 	}
 
 	return 1;
