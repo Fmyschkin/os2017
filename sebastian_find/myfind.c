@@ -12,7 +12,7 @@
 * @version 2
 *
 * @todo God help us all!
-*												
+*
 */
 
 /*
@@ -66,7 +66,6 @@ static void do_print(const char* file_name);
 static void do_ls_print(const char* file_name, const char* const* parms, const struct stat buf);
 
 static void do_usage_print(const char* const* parms);
-static void do_error(const char* file_name, const char* const* parms);
 
 
 /**
@@ -91,7 +90,7 @@ int main(int argc, const char *argv[])
 		do_usage_print(argv);
 		return EXIT_FAILURE;
 	}
-	else 
+	else
 	{
 		if (do_check(argv) == 0)
 		{
@@ -105,7 +104,7 @@ int main(int argc, const char *argv[])
 	}
 	if (fflush(stdout) == EOF)
 	{
-		fprintf(stderr,"Unable to flush stdout!: %s\n", strerror(errno));
+		fprintf(stderr, "Unable to flush stdout!: %s\n", strerror(errno));
 	}
 	return EXIT_SUCCESS;
 }
@@ -128,11 +127,11 @@ static int do_check(const char* const* parms)
 
 	while (parms[offset] != NULL)
 	{
-		if (strcmp(parms[offset], "-user")		== 0 ||
-			strcmp(parms[offset], "-name")		== 0 ||
-			strcmp(parms[offset], "-type")		== 0 ||
-			strcmp(parms[offset], "-path")		== 0 ||
-			strcmp(parms[offset], "-group")		== 0)
+		if (strcmp(parms[offset], "-user") == 0 ||
+			strcmp(parms[offset], "-name") == 0 ||
+			strcmp(parms[offset], "-type") == 0 ||
+			strcmp(parms[offset], "-path") == 0 ||
+			strcmp(parms[offset], "-group") == 0)
 		{
 			if (parms[offset + 1] == NULL)
 			{
@@ -141,10 +140,10 @@ static int do_check(const char* const* parms)
 			}
 			offset += 2;
 		}
-		else if (strcmp(parms[offset], "-print")	== 0 ||
-				 strcmp(parms[offset], "-ls")		== 0 ||
-				 strcmp(parms[offset], "-nouser")	== 0 ||
-				 strcmp(parms[offset], "-nogroup")	== 0)
+		else if (strcmp(parms[offset], "-print") == 0 ||
+			strcmp(parms[offset], "-ls") == 0 ||
+			strcmp(parms[offset], "-nouser") == 0 ||
+			strcmp(parms[offset], "-nogroup") == 0)
 		{
 			offset += 1;
 		}
@@ -181,7 +180,7 @@ static void do_file(const char* file_name, const char* const* parms)
 		fprintf(stderr, "%s: unable to read lstat '%s' - %s\n", *parms, file_name, strerror(errno));
 		return;
 	}
-	while(parms[offset] != NULL)
+	while (parms[offset] != NULL)
 	{
 		if (strcmp(parms[offset], "-name") == 0)
 		{
@@ -198,7 +197,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				do_error(file_name, parms);
+				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -212,7 +211,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				do_error(file_name, parms);
+				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -225,7 +224,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				do_error(file_name, parms);
+				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -238,7 +237,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				do_error(file_name, parms);
+				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -251,7 +250,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				do_error(file_name, parms);
+				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -264,11 +263,11 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				do_error(file_name, parms);
+				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
 		}
-		
+
 		else if (strcmp(parms[offset], "-print") == 0)
 		{
 			do_print(file_name);
@@ -328,7 +327,7 @@ static void do_dir(const char* dir_name, const char* const* parms)
 	{
 		if (errno != 0)
 		{
-			do_error(dir_name, parms);
+			fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
 			errno = 0;			//reset errno
 			continue;
 		}
@@ -350,7 +349,7 @@ static void do_dir(const char* dir_name, const char* const* parms)
 
 	if (closedir(dirp) != 0)
 	{
-		do_error(dir_name, parms);
+		fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
 		return;
 	}
 
@@ -389,22 +388,22 @@ static int do_name(const char* file_name, const char* parms)
 }
 
 /**
-* 
+*
 * \brief do_type compares files with selected input with the file system.
 *
-* This function compares the file_name before "-type" and 
+* This function compares the file_name before "-type" and
 * the argument after "-type" with the file system. (parms)
-* Allowed arguments after "-type": 			
+* Allowed arguments after "-type":
 * <b>	 if the file is a block special file (a device like a disk)
-* <c>	 if the file is a character special file 
-* <d>	 if the file is a directory 
+* <c>	 if the file is a character special file
+* <d>	 if the file is a directory
 * <p>	 if the file is a FIFO special file, or a pipe
 * <f>	 if the file is a regular file
 * <l>	 if the file is a symbolic link
 * <s>	 if the file is a socket (generalized interprocess communication channel)
 * It returns 1 if the comparation is successful and 0 if unsuccessful.
-* 
-* 
+*
+*
 * \param parms needed for matching with the file system.
 * \param stat buf is the buffer with the metadata created by lstat.
 *
@@ -414,7 +413,7 @@ static int do_type(const char* parms, const struct stat buf)
 {
 	int match = -1;
 
-	if		(strcmp(parms, "b") == 0) match = S_ISBLK(buf.st_mode);
+	if (strcmp(parms, "b") == 0) match = S_ISBLK(buf.st_mode);
 	else if (strcmp(parms, "c") == 0) match = S_ISCHR(buf.st_mode);
 	else if (strcmp(parms, "d") == 0) match = S_ISDIR(buf.st_mode);
 	else if (strcmp(parms, "p") == 0) match = S_ISFIFO(buf.st_mode);
@@ -437,17 +436,15 @@ static int do_type(const char* parms, const struct stat buf)
 /**
 *
 * \brief do_path compares files with a path with the file system.
-
-* This function compares the file_name before "-path" and 
+* This function compares the file_name before "-path" and
 * the argument after "-path" with the file system. (parms)
 * It returns 1 if the comparation is successful and 0 if unsuccessful.
-
 * int fnmatch(const char *pattern, const char *string, int flags);
-* Flag FNM_NOESCAPE > treat backslash as an ordinary character* 
+* Flag FNM_NOESCAPE > treat backslash as an ordinary character*
 *
 * \param file_name is the name of the path to be checked.
 * \param parms needed for matching with the file system.
-* 
+*
 * return 1 if successful 0 if unsuccessful
 */
 static int do_path(const char* file_name, const char *parms)
@@ -484,7 +481,7 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 	unsigned int id = 0;
 	pwd = getpwnam(userparms);
 	errno = 0;
-	
+
 	if (pwd != NULL)
 	{
 		if (strcmp(userOrGroup, "user") == 0)
@@ -502,12 +499,12 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 			}
 		}
 	}
-	else 
+	else
 	{
 		if (errno != 0)
 		{
 			exit(EXIT_FAILURE);
-		}		
+		}
 		if (strcmp(userOrGroup, "user") == 0)
 		{
 			id = strtol(userparms, &endptr, 10);
@@ -515,19 +512,19 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 			{
 				exit(EXIT_FAILURE); //strtol couldnt finish converting}
 			}
-			if(userparms != endptr)
+			if (userparms != endptr)
 			{
 				if (buf.st_uid == id)
 				{
 					return 1;
 				}
-			}			
+			}
 			else
 			{
 				fprintf(stderr, "myfind: %s is not the name of a known %s\n", userparms, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
-		}	
+		}
 		else if (strcmp(userOrGroup, "group") == 0)
 		{
 			id = strtol(userparms, &endptr, 10);
@@ -535,10 +532,10 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 			{
 				exit(EXIT_FAILURE); //strtol couldnt finish converting}
 			}
-			if(userparms != endptr)
+			if (userparms != endptr)
 			{
 				if (buf.st_gid == id)
-				{	
+				{
 					return 1;
 				}
 			}
@@ -571,7 +568,7 @@ static int do_comp_no_userOrGroup(const char* file_name, const char* const* parm
 {
 	const struct passwd *pwd = NULL;
 	const struct group *gid = NULL;
-	errno = 0;			
+	errno = 0;
 	if (strcmp(userOrGroup, "nouser") == 0)
 	{
 		pwd = getpwuid(buf.st_uid);
@@ -620,21 +617,21 @@ static void do_print(const char* file_name)
 
 /**
 *
-* \This funktion list current file in ls -dils format on standard output. 
-* 
+* \This funktion list current file in ls -dils format on standard output.
+*
 * The block counts are of 1K blocks, unless the environment variable POSIXLY_CORRECT is set, in which case 512-byte blocks are used.
 * char *getenv(const char *name) searches for the environment string pointed to by name and returns the associated value to the string.
 * Acronym: P ortable O perating S ystem I nterface UniX
-* 	
+*
 * strftime - format date and time
 *  %b The abbreviated month name according to the current locale. (Calculated from tm_mon.)
-*  %e Like %d, the day of the month as a decimal number, but a leading zero is replaced by a space. 
+*  %e Like %d, the day of the month as a decimal number, but a leading zero is replaced by a space.
 *
 *
 * checks:
 * <->	 if the file is a regular file
-* <d>	 if the file is a directory 
-* <c>	 if the file is a character special file 
+* <d>	 if the file is a directory
+* <c>	 if the file is a character special file
 * <b>	 if the file is a block special file (a device like a disk)
 * <p>	 if the file is a FIFO special file, or a pipe
 * <l>	 if the file is a symbolic link
@@ -803,7 +800,7 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 *
 *
 */
-static void do_usage_print(const char* const* parms) 
+static void do_usage_print(const char* const* parms)
 {
 	fprintf(stderr, "Usage: %s <file or directory> <aktion> \n"
 		"-type <bcdpfls>\n"
@@ -819,15 +816,7 @@ static void do_usage_print(const char* const* parms)
 	exit(EXIT_FAILURE);
 }
 
-/**
-*
-* \This funktion prints error messages
-*
-*/
-static void do_error(const char* file_name, const char* const* parms)
-{
-	fprintf(stderr, "%s: %s %s\n", *parms, file_name, strerror(errno));
-}
+
 /*
 * =================================================================== eof ==
 */
