@@ -769,7 +769,7 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 		return;
 	}
 
-	if (printf("%6u %4u %s%4.0d %s %s %8lu %s %s\n", (unsigned int)buf.st_ino, blocks, mode, buf.st_nlink, do_user, do_group, buf.st_size, do_time, do_name) < 0)
+	if (printf("%6u %4u %s%4.0d%9s%9s %8u %s %s\n", (unsigned int)buf.st_ino, blocks, mode, buf.st_nlink, do_user, do_group, (unsigned int)buf.st_size, do_time, do_name) < 0)
 	{
 		fprintf(stderr, "%s: -ls error %s", *parms, strerror(errno));
 		return EXIT_FAILURE;
