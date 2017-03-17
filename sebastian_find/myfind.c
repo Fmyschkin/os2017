@@ -220,7 +220,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			if (parms[offset + 1] != NULL)
 			{
 				print_needed = do_userOrGroup(parms[offset + 1], buf, "user");
-				offset++;
+				offset+=2;
 			}
 			else
 			{
@@ -234,7 +234,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			if (parms[offset + 1] != NULL)
 			{
 				print_needed = do_userOrGroup(parms[offset + 1], buf, "group");
-				offset++;
+				offset+=2;
 			}
 			else
 			{
