@@ -9,7 +9,7 @@
 * @author Sebastian Boehm <ic16b032@technikum-wien.at>
 * @date 2017/03/17
 *
-* @version 1.1
+* @version 1.2
 *
 * @todo God help us all!
 *												
