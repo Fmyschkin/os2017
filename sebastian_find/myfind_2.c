@@ -189,6 +189,11 @@ static void do_file(const char* file_name, const char* const* parms)
 				match = do_name(file_name, parms[offset + 1]);
 				offset++;
 			}
+			else
+			{
+				fprintf(stderr, "%s: -name needs another argument `%s'\n", file_name, *parms);
+				exit(EXIT_FAILURE);
+			} 
 		}
 		else if (strcmp(parms[offset], "-type") == 0)
 		{
@@ -199,7 +204,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+				fprintf(stderr, "%s: -type needs another argument `%s'\n", file_name, *parms);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -213,7 +218,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+				fprintf(stderr, "%s: -path needs another argument `%s'\n", file_name, *parms);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -227,7 +232,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+				fprintf(stderr, "%s: -user needs another argument `%s'\n", file_name, *parms);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -241,7 +246,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			}
 			else
 			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+				fprintf(stderr, "%s: -group needs another argument `%s'\n", file_name, *parms);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -313,7 +318,7 @@ static void do_dir(const char* dir_name, const char* const* parms)
 	{
 		if (errno != 0)
 		{
-			fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+			fprintf(stderr, "%s: can't read directory `%s'\n", *parms, strerror(errno));
 			errno = 0;			//reset errno
 			continue;
 		}
@@ -335,7 +340,7 @@ static void do_dir(const char* dir_name, const char* const* parms)
 
 	if (closedir(dirp) != 0)
 	{
-		fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+		fprintf(stderr, "%s: can't close directory `%s'\n", *parms, strerror(errno));
 		return;
 	}
 
@@ -413,7 +418,7 @@ static int do_type(const char* parms, const struct stat buf)
 	else if (strcmp(parms, "s") == 0) match = S_ISSOCK(buf.st_mode);
 	else
 	{
-		fprintf(stderr, "%s: unknown argument to %s\n", parms, strerror(errno));
+		fprintf(stderr, "%s: unknown argument\n", parms);
 		exit(EXIT_FAILURE);
 	}
 	if (match == 0)
