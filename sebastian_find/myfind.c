@@ -371,17 +371,21 @@ static void do_dir(const char* dir_name, const char* const* parms)
 static int do_name(const char* file_name, const char* parms)
 {
 	char temp_name[strlen(file_name) + 1]; // basename() may modify the contents of path, so it may be desirable to pass a copy when calling one of these functions.
-	strcpy(temp_name, file_name);
 	char* base = NULL;
+	strcpy(temp_name, file_name);
 	base = basename(temp_name);
-
-	const int match_name = fnmatch(base, parms, FNM_NOESCAPE);
+	
+	int match_name = fnmatch(parms, base, FNM_NOESCAPE);
 
 	if (match_name == 0)
 	{
 		return 1;
 	}
-	else if (match_name != FNM_NOMATCH) //FNM_NOMATCH if there is no match or another nonzero value if there is an error
+	else if (match_name == FNM_NOMATCH)
+	{
+		return 0;
+	}
+	else if (match_name != 0) //nonzero value if there is an error
 		exit(EXIT_FAILURE);
 
 	return 0;
