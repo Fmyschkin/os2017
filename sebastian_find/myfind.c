@@ -59,8 +59,8 @@ static void do_dir(const char* dir_name, const char* const* parms);
 static int do_name(const char* file_name, const char* parms);
 static int do_type(const char* parms, const struct stat buf);
 static int do_path(const char* file_name, const char *parms);
-static int do_comp_userOrGroup(const char * userparms, const struct stat buf, char *userOrGroup);
-static int do_comp_no_userOrGroup(const char* file_name, const char* const* parms, const struct stat buf, char *userOrGroup);
+static int do_userOrGroup(const char * userparms, const struct stat buf, char *userOrGroup);
+static int do_no_userOrGroup(const char* file_name, const char* const* parms, const struct stat buf, char *userOrGroup);
 
 static void do_print(const char* file_name);
 static void do_ls_print(const char* file_name, const char* const* parms, const struct stat buf);
@@ -207,7 +207,6 @@ static void do_file(const char* file_name, const char* const* parms)
 			if (parms[offset + 1] != NULL)
 			{
 				print_needed = do_path(file_name, parms[offset + 1]);
-
 			}
 			else
 			{
@@ -220,7 +219,8 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_comp_userOrGroup(parms[offset + 1], buf, "user");
+				print_needed = do_userOrGroup(parms[offset + 1], buf, "user");
+				offset++;
 			}
 			else
 			{
@@ -233,7 +233,8 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_comp_userOrGroup(parms[offset + 1], buf, "group");
+				print_needed = do_userOrGroup(parms[offset + 1], buf, "group");
+				offset++;
 			}
 			else
 			{
@@ -243,31 +244,12 @@ static void do_file(const char* file_name, const char* const* parms)
 		}
 		else if (strcmp(parms[offset], "-nouser") == 0)
 		{
-
-			if (parms[offset + 1] == NULL)
-			{
-				print_needed = do_comp_no_userOrGroup(file_name, parms, buf, "user");
-			}
-			else
-			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
-				exit(EXIT_FAILURE);
-			}
+			print_needed = do_no_userOrGroup(file_name, parms, buf, "user");
 		}
 		else if (strcmp(parms[offset], "-nogroup") == 0)
 		{
-
-			if (parms[offset + 1] == NULL)
-			{
-				print_needed = do_comp_no_userOrGroup(file_name, parms, buf, "group");
-			}
-			else
-			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
-				exit(EXIT_FAILURE);
-			}
+			print_needed = do_no_userOrGroup(file_name, parms, buf, "group");
 		}
-
 		else if (strcmp(parms[offset], "-print") == 0)
 		{
 			do_print(file_name);
@@ -478,7 +460,7 @@ static int do_path(const char* file_name, const char *parms)
 * \return 1 if successful 0 if unsuccessful
 *
 */
-static int do_comp_userOrGroup(const char * userparms, const struct stat buf, char *userOrGroup)
+static int do_userOrGroup(const char * userparms, const struct stat buf, char *userOrGroup)
 {
 	struct passwd *pwd = NULL;
 	char *endptr = NULL;
@@ -525,7 +507,7 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 			}
 			else
 			{
-				fprintf(stderr, "myfind: %s is not the name of a known %s\n", userparms, strerror(errno));
+				fprintf(stderr, "myfind: %s is not the name of a known %s\n", userparms, userOrGroup);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -545,7 +527,7 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 			}
 			else
 			{
-				fprintf(stderr, "myfind: %s is not the name of a known %s\n", userparms, strerror(errno));
+				fprintf(stderr, "myfind: %s is not the name of a known %s\n", userparms, userOrGroup);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -568,7 +550,7 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 * \return 1 if user or groupless 0 if user or group present
 *
 */
-static int do_comp_no_userOrGroup(const char* file_name, const char* const* parms, const struct stat buf, char *userOrGroup)
+static int do_no_userOrGroup(const char* file_name, const char* const* parms, const struct stat buf, char *userOrGroup)
 {
 	const struct passwd *pwd = NULL;
 	const struct group *gid = NULL;
