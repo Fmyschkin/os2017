@@ -626,6 +626,11 @@ static void do_print(const char* file_name)
 * char *getenv(const char *name) searches for the environment string pointed to by name and returns the associated value to the string.
 * Acronym: P ortable O perating S ystem I nterface UniX
 * 	
+* strftime - format date and time
+*  %b The abbreviated month name according to the current locale. (Calculated from tm_mon.)
+*  %e Like %d, the day of the month as a decimal number, but a leading zero is replaced by a space. 
+*
+*
 * checks:
 * <->	 if the file is a regular file
 * <d>	 if the file is a directory 
@@ -659,7 +664,7 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 {
 	const struct passwd * user = NULL;
 	const struct group* group = NULL;
-	const struct tm* time = NULL;
+	const  time_t* time = &(buf.st_mtime);
 
 	unsigned int blocks = 0;
 	char mode[] = { "?---------" };
@@ -677,9 +682,7 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 	char uid[BUFFER] = { 0 };
 	char gid[BUFFER] = { 0 };
 
-	char month[BUFFER] = { 0 };
-	char do_time[BUFFER] = { 0 };
-
+	char do_time [BUFFER] = { 0 };
 
 	if 		(S_ISREG(buf.st_mode))									mode[0] = '-';		
 	else if (S_ISDIR(buf.st_mode))									mode[0] = 'd';		
@@ -778,13 +781,10 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 	}
 	errno = 0; 
 
-	time = localtime(&(buf.st_mtime));
-
-	strftime(month, sizeof(month), "%b", time);  
-
-	if (sprintf(do_time, "%s %2d %02d:%02d", month, time->tm_mday, time->tm_hour, time->tm_min) < 0)
-	{
-		fprintf(stderr, "%s: do_time error", *parms);
+	if (strftime(do_time, BUFFER, "%b %e %H:%M", localtime(time)) == 0)
+	{	
+		fprintf(stderr, "%s: time error %s", *parms, file_name);
+		return;
 	}
 
 	if (printf("%ld %4u %s%4.0d %s %s %8lu %s %s\n", buf.st_ino, blocks, mode, buf.st_nlink, do_user, do_group, buf.st_size, do_time, do_name) < 0)
