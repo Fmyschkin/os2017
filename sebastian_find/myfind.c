@@ -9,7 +9,7 @@
 * @author Sebastian Boehm <ic16b032@technikum-wien.at>
 * @date 2017/03/17
 *
-* @version 1.2
+* @version 2
 *
 * @todo God help us all!
 *												
@@ -18,7 +18,7 @@
 /*
 * -------------------------------------------------------------- includes --
 */
-//testLine
+
 #include <stdio.h>
 #include <pwd.h>
 #include <sys/types.h>
@@ -57,7 +57,7 @@ static void do_file(const char* file_name, const char* const* parms);
 static void do_dir(const char* dir_name, const char* const* parms);
 
 static int do_name(const char* file_name, const char* parms);
-static int do_type(const char* file_name, const char* parms, const struct stat buf);
+static int do_type(const char* parms, const struct stat buf);
 static int do_path(const char* file_name, const char *parms);
 static int do_comp_userOrGroup(const char * userparms, const struct stat buf, char *userOrGroup);
 static int do_comp_no_userOrGroup(const char* file_name, const char* const* parms, const struct stat buf, char *userOrGroup);
@@ -136,7 +136,7 @@ static int do_check(const char* const* parms)
 		{
 			if (parms[offset + 1] == NULL)
 			{
-				printf("%s: missing argument to `%s'\n", parms[0], parms[offset]);	//CHECK		
+				printf("%s: missing argument to `%s'\n", *parms, strerror(errno));
 				return EXIT_FAILURE;
 			}
 			offset += 2;
@@ -194,7 +194,7 @@ static void do_file(const char* file_name, const char* const* parms)
 		{
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_type(file_name, parms[offset + 1], buf);
+				print_needed = do_type(parms[offset + 1], buf);
 			}
 			else
 			{
@@ -318,7 +318,7 @@ static void do_dir(const char* dir_name, const char* const* parms)
 	dirp = opendir(dir_name);
 	if (dirp == NULL)
 	{
-		fprintf(stderr, "%s: can't open directory `%s'\n", parms[0], dir_name);
+		fprintf(stderr, "%s: can't open directory `%s'\n", parms[0], strerror(errno));
 		return;
 	}
 
@@ -404,13 +404,13 @@ static int do_name(const char* file_name, const char* parms)
 * <s>	 if the file is a socket (generalized interprocess communication channel)
 * It returns 1 if the comparation is successful and 0 if unsuccessful.
 * 
-* \param file_name is the name of the data to be checked.
+* 
 * \param parms needed for matching with the file system.
 * \param stat buf is the buffer with the metadata created by lstat.
 *
 * return 1 if successful 0 if unsuccessful
 */
-static int do_type(const char* file_name, const char* parms, const struct stat buf)
+static int do_type(const char* parms, const struct stat buf)
 {
 	int match = -1;
 
@@ -423,7 +423,7 @@ static int do_type(const char* file_name, const char* parms, const struct stat b
 	else if (strcmp(parms, "s") == 0) match = S_ISSOCK(buf.st_mode);
 	else
 	{
-		fprintf(stderr, "%s: unknown argument to %s\n", parms, file_name);
+		fprintf(stderr, "%s: unknown argument to %s\n", parms, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	if (match == 0)
@@ -524,7 +524,7 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 			}			
 			else
 			{
-				fprintf(stderr, "myfind: %s is not the name of a known %s\n", userparms, userOrGroup);
+				fprintf(stderr, "myfind: %s is not the name of a known %s\n", userparms, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
 		}	
@@ -544,7 +544,7 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 			}
 			else
 			{
-				fprintf(stderr, "myfind: %s is not the name of a known %s\n", userparms, userOrGroup);
+				fprintf(stderr, "myfind: %s is not the name of a known %s\n", userparms, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -581,7 +581,7 @@ static int do_comp_no_userOrGroup(const char* file_name, const char* const* parm
 		}
 		else if (errno != 0)
 		{
-			do_error(file_name, parms);
+			fprintf(stderr, "myfind: %s uid %s is not known %s\n", *parms, file_name, strerror(errno));
 		}
 	}
 	else if (strcmp(userOrGroup, "nogroup") == 0)
@@ -593,7 +593,7 @@ static int do_comp_no_userOrGroup(const char* file_name, const char* const* parm
 		}
 		else if (errno != 0)
 		{
-			do_error(file_name, parms);
+			fprintf(stderr, "myfind: %s gid %s is not known %s\n", *parms, file_name, strerror(errno));
 		}
 	}
 	return 0;
@@ -670,11 +670,11 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 	char mode[] = { "?---------" };
 
 	int symb_link_length = 0;
-	char do_name[strlen(file_name)+ buf.st_size + 1];
+	char do_name[strlen(file_name) + buf.st_size + 1];
 	char symb_link_string[buf.st_size];
 	char arrow[] = { " -> " };
 
-	errno = 0;			
+	errno = 0;
 
 	char* do_user = "";
 	char* do_group = "";
@@ -682,33 +682,33 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 	char uid[BUFFER] = { 0 };
 	char gid[BUFFER] = { 0 };
 
-	char do_time [BUFFER] = { 0 };
+	char do_time[BUFFER] = { 0 };
 
-	if 		(S_ISREG(buf.st_mode))									mode[0] = '-';		
-	else if (S_ISDIR(buf.st_mode))									mode[0] = 'd';		
-	else if (S_ISCHR(buf.st_mode))									mode[0] = 'c';		
-	else if (S_ISBLK(buf.st_mode))									mode[0] = 'b';					
-	else if (S_ISFIFO(buf.st_mode))									mode[0] = 'f';		
-	else if (S_ISLNK(buf.st_mode))									mode[0] = 'l';		
-	else if (S_ISSOCK(buf.st_mode))									mode[0] = 's';		
-	else															mode[0] = '?';		
+	if (S_ISREG(buf.st_mode))									mode[0] = '-';
+	else if (S_ISDIR(buf.st_mode))									mode[0] = 'd';
+	else if (S_ISCHR(buf.st_mode))									mode[0] = 'c';
+	else if (S_ISBLK(buf.st_mode))									mode[0] = 'b';
+	else if (S_ISFIFO(buf.st_mode))									mode[0] = 'f';
+	else if (S_ISLNK(buf.st_mode))									mode[0] = 'l';
+	else if (S_ISSOCK(buf.st_mode))									mode[0] = 's';
+	else															mode[0] = '?';
 
 
-	if		(buf.st_mode & S_IRUSR)									mode[1] = 'r'; 
-	if		(buf.st_mode & S_IWUSR)									mode[2] = 'w'; 
-	if		((buf.st_mode & S_IXUSR) && !(buf.st_mode & S_ISUID))	mode[3] = 'x';
+	if (buf.st_mode & S_IRUSR)									mode[1] = 'r';
+	if (buf.st_mode & S_IWUSR)									mode[2] = 'w';
+	if ((buf.st_mode & S_IXUSR) && !(buf.st_mode & S_ISUID))	mode[3] = 'x';
 	else if (buf.st_mode & S_IXUSR)									mode[3] = 's';
-	else if (buf.st_mode & S_ISUID)									mode[3] = 'S'; 
+	else if (buf.st_mode & S_ISUID)									mode[3] = 'S';
 
-	if		(buf.st_mode & S_IRGRP)									mode[4] = 'r';
-	if		(buf.st_mode & S_IWGRP)									mode[5] = 'w'; 
-	if		((buf.st_mode & S_IXGRP) && !(buf.st_mode & S_ISGID))	mode[6] = 'x'; 
+	if (buf.st_mode & S_IRGRP)									mode[4] = 'r';
+	if (buf.st_mode & S_IWGRP)									mode[5] = 'w';
+	if ((buf.st_mode & S_IXGRP) && !(buf.st_mode & S_ISGID))	mode[6] = 'x';
 	else if (buf.st_mode & S_IXGRP)									mode[6] = 's';
-	else if (buf.st_mode & S_ISGID)									mode[6] = 'S'; 
+	else if (buf.st_mode & S_ISGID)									mode[6] = 'S';
 
-	if		(buf.st_mode & S_IROTH)									mode[7] = 'r'; 
-	if		(buf.st_mode & S_IWOTH)									mode[8] = 'w'; 
-	if		((buf.st_mode & S_IXOTH) && !(buf.st_mode & S_ISVTX))	mode[9] = 'x'; 
+	if (buf.st_mode & S_IROTH)									mode[7] = 'r';
+	if (buf.st_mode & S_IWOTH)									mode[8] = 'w';
+	if ((buf.st_mode & S_IXOTH) && !(buf.st_mode & S_ISVTX))	mode[9] = 'x';
 	else if (buf.st_mode & S_IXOTH)									mode[9] = 't';
 	else if (buf.st_mode & S_ISVTX)									mode[9] = 'T';
 
@@ -729,13 +729,13 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 	{
 		symb_link_length = readlink(do_name, symb_link_string, buf.st_size);
 		symb_link_length += 1;
-		symb_link_string[symb_link_length -1 ] = '\0';   
-		
+		symb_link_string[symb_link_length - 1] = '\0';
+
 
 		if (symb_link_length != -1)
-		{		
+		{
 			strcat(do_name, arrow);
-			strcat(do_name, symb_link_string);	
+			strcat(do_name, symb_link_string);
 		}
 		else
 		{
@@ -743,13 +743,12 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 		}
 	}
 
-	errno = 0; 
+	errno = 0;
 	if ((user = getpwuid(buf.st_uid)) == NULL || user->pw_name == NULL)
 	{
 		if (errno != 0)
 		{
-
-			do_error(file_name, parms);
+			fprintf(stderr, "%s: user error %s", *parms, strerror(errno));
 		}
 		else
 		{
@@ -762,12 +761,12 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 		do_user = user->pw_name;
 	}
 
-	errno = 0;  
+	errno = 0;
 	if ((group = getgrgid(buf.st_gid)) == NULL || (group->gr_name == NULL))
 	{
 		if (errno != 0)
 		{
-			do_error(file_name, parms);
+			fprintf(stderr, "%s: group error %s", *parms, strerror(errno));
 		}
 		else
 		{
@@ -779,17 +778,17 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 	{
 		do_group = group->gr_name;
 	}
-	errno = 0; 
+	errno = 0;
 
 	if (strftime(do_time, BUFFER, "%b %e %H:%M", localtime(time)) == 0)
-	{	
-		fprintf(stderr, "%s: time error %s", *parms, file_name);
+	{
+		fprintf(stderr, "%s: time error %s", *parms, strerror(errno));
 		return;
 	}
 
-	if (printf("%ld %4u %s%4.0d %s %s %8lu %s %s\n", buf.st_ino, blocks, mode, buf.st_nlink, do_user, do_group, buf.st_size, do_time, do_name) < 0)
+	if (printf("%6lu %4u %s%4.0d %s %s %8lu %s %s\n", buf.st_ino, blocks, mode, buf.st_nlink, do_user, do_group, buf.st_size, do_time, do_name) < 0)
 	{
-		fprintf(stderr, "%s: -ls error %s", *parms, file_name);
+		fprintf(stderr, "%s: -ls error %s", *parms, strerror(errno));
 		return EXIT_FAILURE;
 	}
 }
@@ -827,7 +826,7 @@ static void do_usage_print(const char* const* parms)
 */
 static void do_error(const char* file_name, const char* const* parms)
 {
-	fprintf(stderr, "%s: %s %s\n", parms[0], file_name, strerror(errno));
+	fprintf(stderr, "%s: %s %s\n", *parms, file_name, strerror(errno));
 }
 /*
 * =================================================================== eof ==
