@@ -105,7 +105,7 @@ int main(int argc, const char *argv[])
 	}
 	if (fflush(stdout) == EOF)
 	{
-		fprintf(stderr, "Unable to flush stdout!: %s\n", strerror(errno));
+		fprintf(stderr,"Unable to flush stdout!: %s\n", strerror(errno));
 	}
 	return EXIT_SUCCESS;
 }
@@ -178,7 +178,7 @@ static void do_file(const char* file_name, const char* const* parms)
 
 	if (lstat(file_name, &buf) == -1)
 	{
-		fprintf(stderr, "%s: unable to read lstat '%s' - %s\n", parms[0], file_name, strerror(errno));
+		fprintf(stderr, "%s: unable to read lstat '%s' - %s\n", *parms, file_name, strerror(errno));
 		return;
 	}
 	while(parms[offset] != NULL)
@@ -318,7 +318,7 @@ static void do_dir(const char* dir_name, const char* const* parms)
 	dirp = opendir(dir_name);
 	if (dirp == NULL)
 	{
-		fprintf(stderr, "%s: can't open directory `%s'\n", parms[0], strerror(errno));
+		fprintf(stderr, "%s: can't open directory `%s'\n", *parms, strerror(errno));
 		return;
 	}
 
@@ -571,7 +571,7 @@ static int do_comp_no_userOrGroup(const char* file_name, const char* const* parm
 {
 	const struct passwd *pwd = NULL;
 	const struct group *gid = NULL;
-	errno = 0;			//reset errno
+	errno = 0;			
 	if (strcmp(userOrGroup, "nouser") == 0)
 	{
 		pwd = getpwuid(buf.st_uid);
