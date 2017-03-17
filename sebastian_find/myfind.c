@@ -7,12 +7,12 @@
 * @author Maria Kanikova <ic16b002@technikum-wien.at>
 * @author Christian Fuhry <ic16b055@technikum-wien.at>
 * @author Sebastian Boehm <ic16b032@technikum-wien.at>
-* @date 2017/03/16
+* @date 2017/03/17
 *
-* @version 1.0
+* @version 1.1
 *
 * @todo God help us all!
-*												Brauchen wir printed variabel ?
+*												
 */
 
 /*
@@ -128,11 +128,11 @@ static int do_check(const char* const* parms)
 
 	while (parms[offset] != NULL)
 	{
-		if (strcmp(parms[offset], "-user") == 0 ||
-			strcmp(parms[offset], "-name") == 0 ||
-			strcmp(parms[offset], "-type") == 0 ||
-			strcmp(parms[offset], "-path") == 0 ||
-			strcmp(parms[offset], "-group") == 0)
+		if (strcmp(parms[offset], "-user")		== 0 ||
+			strcmp(parms[offset], "-name")		== 0 ||
+			strcmp(parms[offset], "-type")		== 0 ||
+			strcmp(parms[offset], "-path")		== 0 ||
+			strcmp(parms[offset], "-group")		== 0)
 		{
 			if (parms[offset + 1] == NULL)
 			{
@@ -141,10 +141,10 @@ static int do_check(const char* const* parms)
 			}
 			offset += 2;
 		}
-		else if (strcmp(parms[offset], "-print") == 0 ||
-			strcmp(parms[offset], "-ls") == 0 ||
-			strcmp(parms[offset], "-nouser") == 0 ||
-			strcmp(parms[offset], "-nogroup") == 0)
+		else if (strcmp(parms[offset], "-print")	== 0 ||
+				 strcmp(parms[offset], "-ls")		== 0 ||
+				 strcmp(parms[offset], "-nouser")	== 0 ||
+				 strcmp(parms[offset], "-nogroup")	== 0)
 		{
 			offset += 1;
 		}
@@ -621,9 +621,39 @@ static void do_print(const char* file_name)
 /**
 *
 * \This funktion list current file in ls -dils format on standard output. 
-*  The block counts are of 1K blocks, unless the environment variable POSIXLY_CORRECT is set, in which case 512-byte blocks are used.
-*  char *getenv(const char *name) searches for the environment string pointed to by name and returns the associated value to the string.
-*  Acronym for P ortable O perating S ystem I nterface UniX.
+* 
+* The block counts are of 1K blocks, unless the environment variable POSIXLY_CORRECT is set, in which case 512-byte blocks are used.
+* char *getenv(const char *name) searches for the environment string pointed to by name and returns the associated value to the string.
+* Acronym: P ortable O perating S ystem I nterface UniX
+* 	
+* checks:
+* <->	 if the file is a regular file
+* <d>	 if the file is a directory 
+* <c>	 if the file is a character special file 
+* <b>	 if the file is a block special file (a device like a disk)
+* <p>	 if the file is a FIFO special file, or a pipe
+* <l>	 if the file is a symbolic link
+* <s>	 if the file is a socket (generalized interprocess communication channel)
+*
+* <buf.st_mode & S_IRUSR>							'r' user readable
+* <buf.st_mode & S_IWUSR>							'w' user writeable
+* <buf.st_mode & S_IXUSR && !buf.st_mode & S_ISUID>	'x' user executable without sticky
+* <buf.st_mode & S_IXUSR>							's' user executable
+* <buf.st_mode & S_ISUID>							'S' user not executable with sticky
+* <buf.st_mode & S_IRGRP>							'r' group readable
+* <buf.st_mode & S_IWGRP>							'w' group writeable
+* <buf.st_mode & S_IXGRP && !buf.st_mode & S_ISGID>	'x' group executable without sticky
+* <buf.st_mode & S_IXGRP>							's' group executable
+* <buf.st_mode & S_ISGID>							'S' group not executable with sticky
+* <buf.st_mode & S_IROTH>							'r' others readable
+* <buf.st_mode & S_IWOTH>							'w' others writeable
+* <buf.st_mode & S_IXOTH && !buf.st_mode & S_ISVTX>	'x' others executable without sticky
+* <buf.st_mode & S_IXOTH>							't' others executable
+* <buf.st_mode & S_ISVTX>							'T' others save swapped test after use (sticky)
+*
+* \param file_name is the name to print.
+* \param parms needed for error handling.
+* \param stat buf is the buffer with the metadata created by lstat.
 */
 static void do_ls_print(const char* file_name, const char* const* parms, const struct stat buf)
 {
@@ -639,7 +669,7 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 	char symb_link_string[buf.st_size];
 	char arrow[] = { " -> " };
 
-	errno = 0;			//reset errno
+	errno = 0;			
 
 	char* do_user = "";
 	char* do_group = "";
@@ -651,33 +681,33 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 	char do_time[BUFFER] = { 0 };
 
 
-	if 	(S_ISREG(buf.st_mode))		mode[0] = '-';		//regular file
-	else if (S_ISDIR(buf.st_mode))		mode[0] = 'd';		//directory
-	else if (S_ISCHR(buf.st_mode))		mode[0] = 'c';		//char special file
-	else if (S_ISBLK(buf.st_mode))		mode[0] = 'b';		//block special file			
-	else if (S_ISFIFO(buf.st_mode))		mode[0] = 'f';		//FIFO(named pipe)
-	else if (S_ISLNK(buf.st_mode))		mode[0] = 'l';		//symbolic link
-	else if (S_ISSOCK(buf.st_mode))		mode[0] = 's';		//socket
-	else					mode[0] = '?';		//unknown 
+	if 		(S_ISREG(buf.st_mode))									mode[0] = '-';		
+	else if (S_ISDIR(buf.st_mode))									mode[0] = 'd';		
+	else if (S_ISCHR(buf.st_mode))									mode[0] = 'c';		
+	else if (S_ISBLK(buf.st_mode))									mode[0] = 'b';					
+	else if (S_ISFIFO(buf.st_mode))									mode[0] = 'f';		
+	else if (S_ISLNK(buf.st_mode))									mode[0] = 'l';		
+	else if (S_ISSOCK(buf.st_mode))									mode[0] = 's';		
+	else															mode[0] = '?';		
 
 
-	if (buf.st_mode & S_IRUSR)					mode[1] = 'r'; //user readable	
-	if (buf.st_mode & S_IWUSR)					mode[2] = 'w'; //user writeable
-	if ((buf.st_mode & S_IXUSR) && !(buf.st_mode & S_ISUID))	mode[3] = 'x'; //user executable without sticky
-	else if (buf.st_mode & S_IXUSR)					mode[3] = 's'; //user executable
-	else if (buf.st_mode & S_ISUID)					mode[3] = 'S'; //user not executable with sticky
+	if		(buf.st_mode & S_IRUSR)									mode[1] = 'r'; 
+	if		(buf.st_mode & S_IWUSR)									mode[2] = 'w'; 
+	if		((buf.st_mode & S_IXUSR) && !(buf.st_mode & S_ISUID))	mode[3] = 'x';
+	else if (buf.st_mode & S_IXUSR)									mode[3] = 's';
+	else if (buf.st_mode & S_ISUID)									mode[3] = 'S'; 
 
-	if (buf.st_mode & S_IRGRP)					mode[4] = 'r'; //group readable	
-	if (buf.st_mode & S_IWGRP)					mode[5] = 'w'; //group writeable
-	if ((buf.st_mode & S_IXGRP) && !(buf.st_mode & S_ISGID))	mode[6] = 'x'; //group executable without sticky
-	else if (buf.st_mode & S_IXGRP)					mode[6] = 's'; //group executable
-	else if (buf.st_mode & S_ISGID)					mode[6] = 'S'; //group not executable with sticky
+	if		(buf.st_mode & S_IRGRP)									mode[4] = 'r';
+	if		(buf.st_mode & S_IWGRP)									mode[5] = 'w'; 
+	if		((buf.st_mode & S_IXGRP) && !(buf.st_mode & S_ISGID))	mode[6] = 'x'; 
+	else if (buf.st_mode & S_IXGRP)									mode[6] = 's';
+	else if (buf.st_mode & S_ISGID)									mode[6] = 'S'; 
 
-	if (buf.st_mode & S_IROTH)					mode[7] = 'r'; //others readable	
-	if (buf.st_mode & S_IWOTH)					mode[8] = 'w'; //others writeable
-	if ((buf.st_mode & S_IXOTH) && !(buf.st_mode & S_ISVTX))	mode[9] = 'x'; //others executable without sticky
-	else if (buf.st_mode & S_IXOTH)					mode[9] = 't'; //others executable
-	else if (buf.st_mode & S_ISVTX)					mode[9] = 'T'; //others save swapped test after use (sticky)
+	if		(buf.st_mode & S_IROTH)									mode[7] = 'r'; 
+	if		(buf.st_mode & S_IWOTH)									mode[8] = 'w'; 
+	if		((buf.st_mode & S_IXOTH) && !(buf.st_mode & S_ISVTX))	mode[9] = 'x'; 
+	else if (buf.st_mode & S_IXOTH)									mode[9] = 't';
+	else if (buf.st_mode & S_ISVTX)									mode[9] = 'T';
 
 	strcpy(do_name, file_name);
 
@@ -687,7 +717,7 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 
 		if (getenv("POSIXLY_CORRECT") == NULL)
 		{
-			blocks = ((unsigned int)buf.st_blocks);
+			blocks = (unsigned int)buf.st_blocks;
 			blocks = blocks / 2 + buf.st_blocks % 2;
 		}
 	}
@@ -696,7 +726,7 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 	{
 		symb_link_length = readlink(do_name, symb_link_string, buf.st_size);
 		symb_link_length += 1;
-		symb_link_string[symb_link_length -1 ] = '\0';   //ending for readlink '\0'
+		symb_link_string[symb_link_length -1 ] = '\0';   
 		
 
 		if (symb_link_length != -1)
@@ -710,7 +740,7 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 		}
 	}
 
-	errno = 0;  //reset errno
+	errno = 0; 
 	if ((user = getpwuid(buf.st_uid)) == NULL || user->pw_name == NULL)
 	{
 		if (errno != 0)
@@ -729,7 +759,7 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 		do_user = user->pw_name;
 	}
 
-	errno = 0;  //reset errno
+	errno = 0;  
 	if ((group = getgrgid(buf.st_gid)) == NULL || (group->gr_name == NULL))
 	{
 		if (errno != 0)
@@ -746,11 +776,11 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 	{
 		do_group = group->gr_name;
 	}
-	errno = 0;  //reset errno
+	errno = 0; 
 
 	time = localtime(&(buf.st_mtime));
 
-	strftime(month, sizeof(month), "%b", time);  //formatted month 
+	strftime(month, sizeof(month), "%b", time);  
 
 	if (sprintf(do_time, "%s %2d %02d:%02d", month, time->tm_mday, time->tm_hour, time->tm_min) < 0)
 	{
