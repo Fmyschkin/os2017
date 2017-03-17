@@ -180,7 +180,7 @@ static void do_file(const char* file_name, const char* const* parms)
 		fprintf(stderr, "%s: unable to read lstat '%s' - %s\n", *parms, file_name, strerror(errno));
 		return;
 	}
-	while ((parms[offset] != NULL) && (print_needed == 0))
+	while (parms[offset] != NULL) 
 	{
 		if (strcmp(parms[offset], "-name") == 0)
 		{
