@@ -339,15 +339,16 @@ static void do_dir(const char* dir_name, const char* const* parms)
 
 /**
 *
-* \brief comp_name compares file name with find name.
+* \brief do_name compares file name with argument.
 *
-* xxx.
+* Compares enteres parameter with presented file name.
 *
-* \param file_name
-* \param parms
-* \param fnm
+* \param file_name name of the file to compare with
+* \param parms argument for -name
 *
-* \return njet
+* \return 1 if successful 0 if unsuccessful
+* \retval 1 if successful and print needed
+* \retval 0 if no comparison but no error
 *
 */
 static int do_name(const char* file_name, const char* parms)
@@ -458,6 +459,8 @@ static int do_path(const char* file_name, const char *parms)
 * \param userOrGroup hardcoded to distinguish betweed -user and -group search action.
 *
 * \return 1 if successful 0 if unsuccessful
+* \retval 1 if successful and print needed
+* \retval 0 if no comparison but no error
 *
 */
 static int do_userOrGroup(const char * userparms, const struct stat buf, char *userOrGroup)
@@ -537,7 +540,7 @@ static int do_userOrGroup(const char * userparms, const struct stat buf, char *u
 
 /**
 *
-* \brief do_comp_no_userOrGroup checks if a file is user- or groupless
+* \brief do_no_userOrGroup checks if a file is user- or groupless
 *
 * This function checks if a file or directory currently has a user or group assigned.
 * It returns 1 if the user or group parameter is not set in file.
@@ -547,7 +550,9 @@ static int do_userOrGroup(const char * userparms, const struct stat buf, char *u
 * \param stat buf is the buffer with the metadata created by lstat.
 * \param userOrGroup hardcoded to distinguish betweed -nouser and -nogroup  action.
 *
-* \return 1 if user or groupless 0 if user or group present
+* \return 1 if user- or groupless 0 if user or group present
+* \retval 1 if successful and print needed
+* \retval 0 if no comparison but no error
 *
 */
 static int do_no_userOrGroup(const char* file_name, const char* const* parms, const struct stat buf, char *userOrGroup)
@@ -584,9 +589,9 @@ static int do_no_userOrGroup(const char* file_name, const char* const* parms, co
 
 /**
 *
-* \brief do_print prints the all matches on the standard output.
+* \brief do_print prints the all matches.
 *
-* Prints files or directory with the same name as argv[2].
+* Prints files or directory on the standard output.
 *
 * \param file_name Name of the file as defined by the calling function.
 *
@@ -783,7 +788,7 @@ static void do_ls_print(const char* file_name, const char* const* parms, const s
 * This function lists the parms needed for successful myfind execution.
 *
 * \param parms is list of parms typed as parms of function
-*
+* \return nothing
 *
 */
 static void do_usage_print(const char* const* parms)
