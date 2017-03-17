@@ -392,7 +392,6 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 				return 1;
 			}
 		}
-<<<<<<< HEAD
 	}
 	else 
 	{
@@ -401,9 +400,6 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 			exit(EXIT_FAILURE);
 		}		
 		if (strcmp(userOrGroup, "user") == 0)
-=======
-		else if (strcmp(userOrGroup, "group") == 0)
->>>>>>> origin/master
 		{
 			id = strtol(userparms, &endptr, 10);
 			if (strcmp(endptr, "/0") == 0)
