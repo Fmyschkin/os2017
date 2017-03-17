@@ -370,12 +370,12 @@ static int do_name(const char* file_name, const char* parms)
 	}
 	else if (match_name == FNM_NOMATCH)
 	{
-		exit(EXIT_SUCCESS);//return 0;
+		exit(EXIT_SUCCESS);
 	}
 	else if (match_name != 0) //nonzero value if there is an error
 		exit(EXIT_FAILURE);
 
-	exit(EXIT_SUCCESS);// return 0;
+	exit(EXIT_SUCCESS);
 }
 
 /**
@@ -418,7 +418,7 @@ static int do_type(const char* parms, const struct stat buf)
 	}
 	if (match == 0)
 	{
-		return 0;
+		exit(EXIT_SUCCESS);
 	}
 
 	return 1;
