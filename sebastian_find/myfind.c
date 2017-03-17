@@ -124,7 +124,7 @@ static void do_file(const char* file_name, const char* const* parms)
 
 	if (lstat(file_name, &buf) == -1)
 	{
-		fprintf(stderr, "%s: unable to read lstat `%s'\n", parms[0], file_name);
+		fprintf(stderr, "%s: unable to read lstat '%s' - %s\n", parms[0], file_name, strerror(errno));
 		return;
 	}
 	while (parms[offset] != NULL)
@@ -374,51 +374,71 @@ static int do_comp_userOrGroup(const char * userparms, const struct stat buf, ch
 	char *endptr = NULL;
 	unsigned int id = 0;
 	pwd = getpwnam(userparms);
-
-	if (pwd == NULL) //A null pointer is returned if the requested entry is not found, or an error occurs.
+	errno = 0;
+	
+	if (pwd != NULL)
 	{
-		fprintf(stderr, "-%s: %s is not the name of a known %s\n", userOrGroup, userparms, userOrGroup);
-		exit(EXIT_FAILURE);
-	}
-	else if (pwd != NULL)
-	{
-		if (strcmp(userOrGroup, "-user") == 0)
+		if (strcmp(userOrGroup, "user") == 0)
 		{
 			if (pwd->pw_uid == buf.st_uid)
 			{
 				return 1;
 			}
-			id = strtol(userparms, &endptr, 10);
-			if (strcmp(endptr, "/0") != 0)
-			{
-				exit(EXIT_FAILURE); //strtol couldnt finish converting
-			}
-			if (buf.st_uid == id)
-			{
-				return 1;
-			}
 		}
-		else if (strcmp(userOrGroup, "-group") == 0)
+		else if (strcmp(userOrGroup, "group") == 0)
 		{
-			if (pwd->pw_gid == id)
-			{
-				return 1;
-			}
-			id = strtol(userparms, &endptr, 10);
-			if (strcmp(endptr, "/0") != 0)
-			{
-				exit(EXIT_FAILURE); //strtol couldnt finish converting
-			}
-			if (buf.st_gid == id)
+			if (pwd->pw_gid == buf.st_gid)
 			{
 				return 1;
 			}
 		}
 	}
-	else
+	else 
 	{
-		fprintf(stderr, "-%s: %s is not the name of a known %s\n", userOrGroup, userparms, userOrGroup);
-		exit(EXIT_FAILURE);
+		if (errno != 0)
+		{
+			exit(EXIT_FAILURE);
+		}		
+		if (strcmp(userOrGroup, "user") == 0)
+		{
+			id = strtol(userparms, &endptr, 10);
+			if (strcmp(endptr, "/0") == 0)
+			{
+				exit(EXIT_FAILURE); //strtol couldnt finish converting}
+			}
+			if(userparms != endptr)
+			{
+				if (buf.st_uid == id)
+				{
+					return 1;
+				}
+			}			
+			else
+			{
+				fprintf(stderr, "myfind: %s is not the name of a known %s\n", userparms, userOrGroup);
+				exit(EXIT_FAILURE);
+			}
+		}	
+		else if (strcmp(userOrGroup, "group") == 0)
+		{
+			id = strtol(userparms, &endptr, 10);
+			if (strcmp(endptr, "/0") == 0)
+			{
+				exit(EXIT_FAILURE); //strtol couldnt finish converting}
+			}
+			if(userparms != endptr)
+			{
+				if (buf.st_gid == id)
+				{	
+					return 1;
+				}
+			}
+			else
+			{
+				fprintf(stderr, "myfind: %s is not the name of a known %s\n", userparms, userOrGroup);
+				exit(EXIT_FAILURE);
+			}
+		}
 	}
 	return 0;
 }
@@ -443,7 +463,7 @@ static int do_comp_no_userOrGroup(const char* file_name, const char* const* parm
 	const struct passwd *pwd = NULL;
 	const struct group *gid = NULL;
 	errno = 0;			//reset errno
-	if (strcmp(userOrGroup, "-nouser") == 0)
+	if (strcmp(userOrGroup, "nouser") == 0)
 	{
 		pwd = getpwuid(buf.st_uid);
 		if ((pwd == NULL) && (errno == 0))
@@ -455,7 +475,7 @@ static int do_comp_no_userOrGroup(const char* file_name, const char* const* parm
 			do_error(file_name, parms);
 		}
 	}
-	else if (strcmp(userOrGroup, "-nogroup") == 0)
+	else if (strcmp(userOrGroup, "nogroup") == 0)
 	{
 		gid = getgrgid(buf.st_gid);
 		if ((gid == NULL) && (errno == 0))
