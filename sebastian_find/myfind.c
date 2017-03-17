@@ -57,7 +57,7 @@ static void do_file(const char* file_name, const char* const* parms);
 static void do_dir(const char* dir_name, const char* const* parms);
 
 static int do_name(const char* file_name, const char* parms);
-static int do_type(const char* file_name, const char* parms, const struct stat buf);
+static int do_type(const char* parms, const struct stat buf);
 static int do_path(const char* file_name, const char *parms);
 static int do_userOrGroup(const char * userparms, const struct stat buf, char *userOrGroup);
 static int do_no_userOrGroup(const char* file_name, const char* const* parms, const struct stat buf, char *userOrGroup);
@@ -99,7 +99,7 @@ int main(int argc, const char *argv[])
 		else
 		{
 			do_usage_print(argv);
-			return(EXIT_FAILURE);
+			exit(EXIT_FAILURE);
 		}
 	}
 	if (fflush(stdout) == EOF)
@@ -172,28 +172,30 @@ static void do_file(const char* file_name, const char* const* parms)
 {
 	struct stat buf; //metadata (attribute)
 	int offset = 1; //helper variable to choose array element
-	int print_needed = 0;
-
+	int printed = 0;
+	int match = 0;
 
 	if (lstat(file_name, &buf) == -1)
 	{
 		fprintf(stderr, "%s: unable to read lstat '%s' - %s\n", *parms, file_name, strerror(errno));
 		return;
 	}
-	while ((parms[offset] != NULL) && (print_needed == 0))
+	while (parms[offset] != NULL)
 	{
 		if (strcmp(parms[offset], "-name") == 0)
 		{
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_name(file_name, parms[offset + 1]);
+				match = do_name(file_name, parms[offset + 1]);
+				offset++;
 			}
 		}
 		else if (strcmp(parms[offset], "-type") == 0)
 		{
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_type(file_name, parms[offset + 1], buf);
+				match = do_type(parms[offset + 1], buf);
+				offset++;
 			}
 			else
 			{
@@ -206,7 +208,8 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_path(file_name, parms[offset + 1]);
+				match = do_path(file_name, parms[offset + 1]);
+				offset++;
 			}
 			else
 			{
@@ -219,8 +222,8 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_userOrGroup(parms[offset + 1], buf, "user");
-				offset+=2;
+				match = do_userOrGroup(parms[offset + 1], buf, "user");
+				offset++;
 			}
 			else
 			{
@@ -233,8 +236,8 @@ static void do_file(const char* file_name, const char* const* parms)
 
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_userOrGroup(parms[offset + 1], buf, "group");
-				offset+=2;
+				match = do_userOrGroup(parms[offset + 1], buf, "group");
+				offset++;
 			}
 			else
 			{
@@ -244,32 +247,33 @@ static void do_file(const char* file_name, const char* const* parms)
 		}
 		else if (strcmp(parms[offset], "-nouser") == 0)
 		{
-			print_needed = do_no_userOrGroup(file_name, parms, buf, "user");
+			match = do_no_userOrGroup(file_name, parms, buf, "user");		
 		}
 		else if (strcmp(parms[offset], "-nogroup") == 0)
 		{
-			print_needed = do_no_userOrGroup(file_name, parms, buf, "group");
+			match = do_no_userOrGroup(file_name, parms, buf, "group");			
 		}
 		else if (strcmp(parms[offset], "-print") == 0)
 		{
 			do_print(file_name);
-			print_needed = 0;
+			printed = 1;			
 		}
 		else if (strcmp(parms[offset], "-ls") == 0)
 		{
 			do_ls_print(file_name, parms, buf);
-			print_needed = 0;
+			printed = 1;			
 		}
-		else if (((parms[1]) != NULL) && ((parms[2]) == NULL) && (print_needed == 0))
+		else if (((parms[1]) != NULL) && ((parms[2]) == NULL) && (match == 0))
 		{
-			print_needed = 1;
+			match = 1;
 		}
 		offset++;
 	}
-	if (print_needed > 0)
+	if (match == 1 && printed != 1)
 	{
 		do_print(file_name);
-		
+		printed = 1;
+		match = 0;
 	}
 
 	if (S_ISDIR(buf.st_mode)) //checks if file is a directory
@@ -294,7 +298,7 @@ static void do_dir(const char* dir_name, const char* const* parms)
 {
 	DIR *dirp = NULL;
 	const struct dirent *dirent;
-	int offset = 1; 
+	int offset = 1; //helper variable to choose array element
 
 	dirp = opendir(dir_name);
 	if (dirp == NULL)
@@ -303,14 +307,14 @@ static void do_dir(const char* dir_name, const char* const* parms)
 		return;
 	}
 
-	errno = 0;				
+	errno = 0;					//reset errno
 
 	while ((dirent = readdir(dirp)) != NULL)
 	{
 		if (errno != 0)
 		{
-			fprintf(stderr, "%s: unable to read from directory `%s'\n", *parms, strerror(errno));
-			errno = 0;			
+			fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+			errno = 0;			//reset errno
 			continue;
 		}
 
@@ -331,7 +335,7 @@ static void do_dir(const char* dir_name, const char* const* parms)
 
 	if (closedir(dirp) != 0)
 	{
-		fprintf(stderr, "%s: unable to close directory `%s'\n", *parms, strerror(errno));
+		fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
 		return;
 	}
 
@@ -366,12 +370,12 @@ static int do_name(const char* file_name, const char* parms)
 	}
 	else if (match_name == FNM_NOMATCH)
 	{
-		return 0;
+		exit(EXIT_SUCCESS);//return 0;
 	}
 	else if (match_name != 0) //nonzero value if there is an error
 		exit(EXIT_FAILURE);
 
-	return 0;
+	exit(EXIT_SUCCESS);// return 0;
 }
 
 /**
@@ -396,7 +400,7 @@ static int do_name(const char* file_name, const char* parms)
 *
 * return 1 if successful 0 if unsuccessful
 */
-static int do_type(const char* file_name, const char* parms, const struct stat buf)
+static int do_type(const char* parms, const struct stat buf)
 {
 	int match = -1;
 
@@ -409,7 +413,7 @@ static int do_type(const char* file_name, const char* parms, const struct stat b
 	else if (strcmp(parms, "s") == 0) match = S_ISSOCK(buf.st_mode);
 	else
 	{
-		fprintf(stderr, "%s Unknown argument to -type: %s \n", file_name, parms);
+		fprintf(stderr, "%s: unknown argument to %s\n", parms, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	if (match == 0)
@@ -442,7 +446,7 @@ static int do_path(const char* file_name, const char *parms)
 
 	if (match != 0)
 	{
-		return 0;
+		exit(EXIT_SUCCESS);
 	}
 	return 1;
 }
@@ -535,7 +539,7 @@ static int do_userOrGroup(const char * userparms, const struct stat buf, char *u
 			}
 		}
 	}
-	return 0;
+	exit(EXIT_SUCCESS);
 }
 
 /**
@@ -570,6 +574,7 @@ static int do_no_userOrGroup(const char* file_name, const char* const* parms, co
 		else if (errno != 0)
 		{
 			fprintf(stderr, "myfind: %s uid %s is not known %s\n", *parms, file_name, strerror(errno));
+			exit(EXIT_FAILURE);
 		}
 	}
 	else if (strcmp(userOrGroup, "group") == 0)
@@ -582,9 +587,10 @@ static int do_no_userOrGroup(const char* file_name, const char* const* parms, co
 		else if (errno != 0)
 		{
 			fprintf(stderr, "myfind: %s gid %s is not known %s\n", *parms, file_name, strerror(errno));
+			exit(EXIT_FAILURE);
 		}
 	}
-	return 0;
+	exit(EXIT_SUCCESS);
 }
 
 /**
