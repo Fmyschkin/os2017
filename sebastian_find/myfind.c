@@ -573,7 +573,7 @@ static int do_comp_no_userOrGroup(const char* file_name, const char* const* parm
 	const struct passwd *pwd = NULL;
 	const struct group *gid = NULL;
 	errno = 0;
-	if (strcmp(userOrGroup, "nouser") == 0)
+	if (strcmp(userOrGroup, "user") == 0)
 	{
 		pwd = getpwuid(buf.st_uid);
 		if ((pwd == NULL) && (errno == 0))
@@ -585,7 +585,7 @@ static int do_comp_no_userOrGroup(const char* file_name, const char* const* parm
 			fprintf(stderr, "myfind: %s uid %s is not known %s\n", *parms, file_name, strerror(errno));
 		}
 	}
-	else if (strcmp(userOrGroup, "nogroup") == 0)
+	else if (strcmp(userOrGroup, "group") == 0)
 	{
 		gid = getgrgid(buf.st_gid);
 		if ((gid == NULL) && (errno == 0))
