@@ -57,7 +57,7 @@ static void do_file(const char* file_name, const char* const* parms);
 static void do_dir(const char* dir_name, const char* const* parms);
 
 static int do_name(const char* file_name, const char* parms);
-static int do_type(const char* parms, const struct stat buf);
+static int do_type(const char* file_name, const char* parms, const struct stat buf);
 static int do_path(const char* file_name, const char *parms);
 static int do_userOrGroup(const char * userparms, const struct stat buf, char *userOrGroup);
 static int do_no_userOrGroup(const char* file_name, const char* const* parms, const struct stat buf, char *userOrGroup);
@@ -99,7 +99,7 @@ int main(int argc, const char *argv[])
 		else
 		{
 			do_usage_print(argv);
-			exit(EXIT_FAILURE);
+			return(EXIT_FAILURE);
 		}
 	}
 	if (fflush(stdout) == EOF)
@@ -180,7 +180,7 @@ static void do_file(const char* file_name, const char* const* parms)
 		fprintf(stderr, "%s: unable to read lstat '%s' - %s\n", *parms, file_name, strerror(errno));
 		return;
 	}
-	while (parms[offset] != NULL)
+	while ((parms[offset] != NULL) && (print_needed == 0))
 	{
 		if (strcmp(parms[offset], "-name") == 0)
 		{
@@ -193,7 +193,7 @@ static void do_file(const char* file_name, const char* const* parms)
 		{
 			if (parms[offset + 1] != NULL)
 			{
-				print_needed = do_type(parms[offset + 1], buf);
+				print_needed = do_type(file_name, parms[offset + 1], buf);
 			}
 			else
 			{
@@ -269,7 +269,7 @@ static void do_file(const char* file_name, const char* const* parms)
 	if (print_needed > 0)
 	{
 		do_print(file_name);
-		print_needed = 0;
+		
 	}
 
 	if (S_ISDIR(buf.st_mode)) //checks if file is a directory
@@ -294,7 +294,7 @@ static void do_dir(const char* dir_name, const char* const* parms)
 {
 	DIR *dirp = NULL;
 	const struct dirent *dirent;
-	int offset = 1; //helper variable to choose array element
+	int offset = 1; 
 
 	dirp = opendir(dir_name);
 	if (dirp == NULL)
@@ -303,14 +303,14 @@ static void do_dir(const char* dir_name, const char* const* parms)
 		return;
 	}
 
-	errno = 0;					//reset errno
+	errno = 0;				
 
 	while ((dirent = readdir(dirp)) != NULL)
 	{
 		if (errno != 0)
 		{
-			fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
-			errno = 0;			//reset errno
+			fprintf(stderr, "%s: unable to read from directory `%s'\n", *parms, strerror(errno));
+			errno = 0;			
 			continue;
 		}
 
@@ -331,7 +331,7 @@ static void do_dir(const char* dir_name, const char* const* parms)
 
 	if (closedir(dirp) != 0)
 	{
-		fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
+		fprintf(stderr, "%s: unable to close directory `%s'\n", *parms, strerror(errno));
 		return;
 	}
 
@@ -396,7 +396,7 @@ static int do_name(const char* file_name, const char* parms)
 *
 * return 1 if successful 0 if unsuccessful
 */
-static int do_type(const char* parms, const struct stat buf)
+static int do_type(const char* file_name, const char* parms, const struct stat buf)
 {
 	int match = -1;
 
@@ -409,7 +409,7 @@ static int do_type(const char* parms, const struct stat buf)
 	else if (strcmp(parms, "s") == 0) match = S_ISSOCK(buf.st_mode);
 	else
 	{
-		fprintf(stderr, "%s: unknown argument to %s\n", parms, strerror(errno));
+		fprintf(stderr, "%s Unknown argument to -type: %s \n", file_name, parms);
 		exit(EXIT_FAILURE);
 	}
 	if (match == 0)
