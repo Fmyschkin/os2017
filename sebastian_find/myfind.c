@@ -187,6 +187,7 @@ static void do_file(const char* file_name, const char* const* parms)
 			if (parms[offset + 1] != NULL)
 			{
 				print_needed = do_name(file_name, parms[offset + 1]);
+				offset += 2;
 			}
 		}
 		else if (strcmp(parms[offset], "-type") == 0)
@@ -194,12 +195,9 @@ static void do_file(const char* file_name, const char* const* parms)
 			if (parms[offset + 1] != NULL)
 			{
 				print_needed = do_type(file_name, parms[offset + 1], buf);
+				offset += 2;
 			}
-			else
-			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
-				exit(EXIT_FAILURE);
-			}
+			
 		}
 		else if (strcmp(parms[offset], "-path") == 0)
 		{
@@ -207,12 +205,10 @@ static void do_file(const char* file_name, const char* const* parms)
 			if (parms[offset + 1] != NULL)
 			{
 				print_needed = do_path(file_name, parms[offset + 1]);
+				offset += 2;
 			}
-			else
-			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
-				exit(EXIT_FAILURE);
-			}
+			
+			
 		}
 		else if (strcmp(parms[offset], "-user") == 0)
 		{
@@ -222,11 +218,7 @@ static void do_file(const char* file_name, const char* const* parms)
 				print_needed = do_userOrGroup(parms[offset + 1], buf, "user");
 				offset+=2;
 			}
-			else
-			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
-				exit(EXIT_FAILURE);
-			}
+		
 		}
 		else if (strcmp(parms[offset], "-group") == 0)
 		{
@@ -236,11 +228,7 @@ static void do_file(const char* file_name, const char* const* parms)
 				print_needed = do_userOrGroup(parms[offset + 1], buf, "group");
 				offset+=2;
 			}
-			else
-			{
-				fprintf(stderr, "%s: xx `%s'\n", *parms, strerror(errno));
-				exit(EXIT_FAILURE);
-			}
+		
 		}
 		else if (strcmp(parms[offset], "-nouser") == 0)
 		{
